@@ -9,10 +9,10 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 import h5py
 from sklearn import preprocessing
-import h5py
+
 from sklearn.model_selection import train_test_split
 
-#STEP 2 - HET
+# STEP 2 - HET
 
 csv_member1 = "het_data.csv"
 csv_member2 = "Chengxi_data.csv"
@@ -25,50 +25,82 @@ data_member4_walking = pd.read_csv("Walking-Raw Data.csv")
 data_member4_jumping = pd.read_csv("Jumping-Raw Data.csv")
 
 
-
-
 def segment_data(data, window_size):
     num_segments = data.shape[0] // window_size
     segments = [data.iloc[i * window_size:(i + 1) * window_size].reset_index(drop=True) for i in range(num_segments)]
+    # segments = pd.DataFrame(segments)
     return segments
     # print("Spd.concat(segments, axis=1))
     # return pd.concat(segments, ignore_index=True)
 
+#Global Variables
 
 sampling_rate = 100
 window_size = 5 * sampling_rate
 
 segmented_data_member1 = segment_data(data_member1, window_size)
-print("SEGMENTED_DM1: ", segmented_data_member1)
+# print(segmented_data_member1)
 segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
+segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
+segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
+
+def create_and_combine_dataframes():
+    sampling_rate = 100
+    window_size = 5 * sampling_rate
+    segmented_data_member1 = segment_data(data_member1, window_size)
+    segmented_data_member2 = segment_data(data_member2, window_size)
+    segmented_data_member3 = segment_data(data_member3, window_size)
+    segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
+    segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
+    combined_segmented_data = []
+    for member in segmented_data_member1:
+        combined_segmented_data.append(member)
+    for member in segmented_data_member2:
+        combined_segmented_data.append(member)
+    for member in segmented_data_member3:
+        combined_segmented_data.append(member)
+    print("COMBINED AND SEGMENTED: ", combined_segmented_data)
+    return combined_segmented_data
+
+create_and_combine_dataframes()
 
 
-combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
-                                    ignore_index=True)
-shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
-train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
+# combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
+#                                     ignore_index=True)
 
-print("Train", train_data_segmented)
-print("Test", test_data_segmented)
+#Combining Data
+#https://www.w3schools.com/python/python_for_loops.asp
 
-TODO: UNCOMMENT THIS
-hdf5_file_path = 'hdf5_data.h5'
 
-with h5py.File(hdf5_file_path, 'w') as hdf_file:
-    dataset_group = hdf_file.create_group('dataset')
-    train_group = dataset_group.create_group('Train')
-    train_group.create_dataset('data', data=train_data_segmented.to_numpy())
-    test_group = dataset_group.create_group('Test')
-    test_group.create_dataset('data', data=test_data_segmented.to_numpy())
 
-    member1_group = hdf_file.create_group('Member1 name')
-    member1_group.create_dataset('data', data=data_member1.to_numpy())
-    member2_group = hdf_file.create_group('Member2 name')
-    member2_group.create_dataset('data', data=data_member2.to_numpy())
-    member3_group = hdf_file.create_group('Member3 name')
-    member3_group.create_dataset('data', data=data_member3.to_numpy())
 
+
+# TODO: UNCOMMENT THIS
+# print("COMBINED: ", combined_segmented_data)
+# shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
+# train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
+
+# print("Train", train_data_segmented)
+# print("Test", test_data_segmented)
+
+# TODO: UNCOMMENT THIS
+# hdf5_file_path = 'hdf5_data.h5'
+#
+# with h5py.File(hdf5_file_path, 'w') as hdf_file:
+#     dataset_group = hdf_file.create_group('dataset')
+#     train_group = dataset_group.create_group('Train')
+#     train_group.create_dataset('data', data=train_data_segmented.to_numpy())
+#     test_group = dataset_group.create_group('Test')
+#     test_group.create_dataset('data', data=test_data_segmented.to_numpy())
+#
+#     member1_group = hdf_file.create_group('Member1 name')
+#     member1_group.create_dataset('data', data=data_member1.to_numpy())
+#     member2_group = hdf_file.create_group('Member2 name')
+#     member2_group.create_dataset('data', data=data_member2.to_numpy())
+#     member3_group = hdf_file.create_group('Member3 name')
+#     member3_group.create_dataset('data', data=data_member3.to_numpy())
+#
 
 
 # PREPROCESSING - ALEX WALSH
@@ -77,7 +109,7 @@ with h5py.File(hdf5_file_path, 'w') as hdf_file:
 
 
 #https://stackoverflow.com/questions/7696924/how-do-i-create-multiline-comments-in-python
-'''
+
 def pre_processing(dataset):
     #https://www.w3schools.com/python/pandas/pandas_dataframes.asp -> documentation for pandas
     #https://www.w3schools.com/python/python_functions.asp documentation of python functions
@@ -124,9 +156,9 @@ def pre_processing(dataset):
 
 
 
-pre_processing(segmented_data_member1)
+pre_processing(create_and_combine_dataframes())
 
-'''
+
 
 
 
@@ -168,6 +200,8 @@ def normalize(dataframe):
 
 
 
-feature_extraction(segmented_data_member1)
-normalize(segmented_data_member1)
+def main_function():
+
+    feature_extraction(segmented_data_member1)
+    normalize(segmented_data_member1)
 
