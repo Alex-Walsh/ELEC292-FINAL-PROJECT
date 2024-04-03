@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import numpy
 import pandas as pd
 import numpy as np
+from gensim.parsing import preprocessing
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 import h5py
-
+from sklearn import preprocessing
 import h5py
 from sklearn.model_selection import train_test_split
 
@@ -38,31 +39,32 @@ print("SEGMENTED_DM1: ", segmented_data_member1)
 segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
 
-combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
-                                    ignore_index=True)
-shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
-train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
+#TODO: UNCOMMENT THIS
+# combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
+#                                     ignore_index=True)
+# shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
+# train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
+#
+# print("Train", train_data_segmented)
+# print("Test", test_data_segmented)
 
-print("Train", train_data_segmented)
-print("Test", test_data_segmented)
-
-
-hdf5_file_path = 'hdf5_data.h5'
-
-with h5py.File(hdf5_file_path, 'w') as hdf_file:
-    dataset_group = hdf_file.create_group('dataset')
-    train_group = dataset_group.create_group('Train')
-    train_group.create_dataset('data', data=train_data_segmented.to_numpy())
-    test_group = dataset_group.create_group('Test')
-    test_group.create_dataset('data', data=test_data_segmented.to_numpy())
-
-    member1_group = hdf_file.create_group('Member1 name')
-    member1_group.create_dataset('data', data=data_member1.to_numpy())
-    member2_group = hdf_file.create_group('Member2 name')
-    member2_group.create_dataset('data', data=data_member2.to_numpy())
-    member3_group = hdf_file.create_group('Member3 name')
-    member3_group.create_dataset('data', data=data_member3.to_numpy())
-
+#TODO: UNCOMMENT THIS
+# hdf5_file_path = 'hdf5_data.h5'
+#
+# with h5py.File(hdf5_file_path, 'w') as hdf_file:
+#     dataset_group = hdf_file.create_group('dataset')
+#     train_group = dataset_group.create_group('Train')
+#     train_group.create_dataset('data', data=train_data_segmented.to_numpy())
+#     test_group = dataset_group.create_group('Test')
+#     test_group.create_dataset('data', data=test_data_segmented.to_numpy())
+#
+#     member1_group = hdf_file.create_group('Member1 name')
+#     member1_group.create_dataset('data', data=data_member1.to_numpy())
+#     member2_group = hdf_file.create_group('Member2 name')
+#     member2_group.create_dataset('data', data=data_member2.to_numpy())
+#     member3_group = hdf_file.create_group('Member3 name')
+#     member3_group.create_dataset('data', data=data_member3.to_numpy())
+#
 
 
 # PREPROCESSING - ALEX WALSH
@@ -70,6 +72,8 @@ with h5py.File(hdf5_file_path, 'w') as hdf_file:
 #There are missing values, to deal with the missing values I will use sample and hold imputation
 
 
+#https://stackoverflow.com/questions/7696924/how-do-i-create-multiline-comments-in-python
+'''
 def pre_processing(dataset):
     #https://www.w3schools.com/python/pandas/pandas_dataframes.asp -> documentation for pandas
     #https://www.w3schools.com/python/python_functions.asp documentation of python functions
@@ -81,7 +85,7 @@ def pre_processing(dataset):
     #acceleration does not change instantly, it changes gradually so I will use sample and hold imputation so that we can use that
 
     #noise reduction
-
+#TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
     sma_window_size = 5
     # print(dataset.iloc[:, 1])
     y_data = dataset.iloc[:,1]
@@ -116,12 +120,48 @@ def pre_processing(dataset):
 
 
 
-pre_processing(train_data_segmented)
+pre_processing(segmented_data_member1)
+
+'''
 
 
 
-# def feature_extraction_and_normalization(dataset):
-#     #extract 10 different features from each time window
-#     #Normalize
-#     #TODO: EXTRACT 10 DIFFERENT FEATURES
-#     #TODO: Z-SCORE STANDARDIZATION, MIN-MAX SCALING
+dataframe_features = []
+
+def feature_extraction(dataset):
+    # TODO: FINISH EXTRACTING 10 DIFFERENT FEATURES, CURRENTLY ONLY AT 8
+    i = 0
+    for dataframe in dataset:
+        # print("WINDOW: ", i, " :", dataframe.iloc[:,4])
+        #FEATURE EXTRACTION
+        abs_accel = dataframe.iloc[:,4]
+        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median','range'])
+        features['mean'] = abs_accel.rolling(window=window_size).mean()
+        features['std'] = abs_accel.rolling(window=window_size).std()
+        features['max'] = abs_accel.rolling(window=window_size).max()
+        features['min'] = abs_accel.rolling(window=window_size).min()
+        features['skewness'] = abs_accel.skew()
+        features['kurtosis'] = abs_accel.kurt()
+        features['median'] = abs_accel.median()
+        features['range'] = abs_accel.rank()
+        dataframe_features.append(features)
+
+        i = i + 1
+
+
+def normalize(dataframe):
+    for frame in dataframe:
+        sc = preprocessing.StandardScaler()
+        data = frame.iloc[:, 1:5]
+        print(f'mean before normalizing: {data.mean(axis=0)}')
+        print(f'std before normalizing: {data.std(axis=0)}')
+        dataset = sc.fit_transform(data)
+        print(f'mean after normalizing: {dataset.mean(axis=0).round()}')
+        print(f'std after normalizing: {dataset.std(axis=0).round()}')
+
+
+
+
+feature_extraction(segmented_data_member1)
+normalize(segmented_data_member1)
+
