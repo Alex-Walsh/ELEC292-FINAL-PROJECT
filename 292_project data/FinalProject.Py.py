@@ -21,7 +21,11 @@ csv_member3 = "Alex_data.csv"
 data_member1 = pd.read_csv(csv_member1)
 data_member2 = pd.read_csv(csv_member2)
 data_member3 = pd.read_csv(csv_member3)
-print("DM1", data_member1)
+data_member4_walking = pd.read_csv("Walking-Raw Data.csv")
+data_member4_jumping = pd.read_csv("Jumping-Raw Data.csv")
+
+
+
 
 def segment_data(data, window_size):
     num_segments = data.shape[0] // window_size
@@ -39,32 +43,32 @@ print("SEGMENTED_DM1: ", segmented_data_member1)
 segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
 
-#TODO: UNCOMMENT THIS
-# combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
-#                                     ignore_index=True)
-# shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
-# train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
-#
-# print("Train", train_data_segmented)
-# print("Test", test_data_segmented)
 
-#TODO: UNCOMMENT THIS
-# hdf5_file_path = 'hdf5_data.h5'
-#
-# with h5py.File(hdf5_file_path, 'w') as hdf_file:
-#     dataset_group = hdf_file.create_group('dataset')
-#     train_group = dataset_group.create_group('Train')
-#     train_group.create_dataset('data', data=train_data_segmented.to_numpy())
-#     test_group = dataset_group.create_group('Test')
-#     test_group.create_dataset('data', data=test_data_segmented.to_numpy())
-#
-#     member1_group = hdf_file.create_group('Member1 name')
-#     member1_group.create_dataset('data', data=data_member1.to_numpy())
-#     member2_group = hdf_file.create_group('Member2 name')
-#     member2_group.create_dataset('data', data=data_member2.to_numpy())
-#     member3_group = hdf_file.create_group('Member3 name')
-#     member3_group.create_dataset('data', data=data_member3.to_numpy())
-#
+combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
+                                    ignore_index=True)
+shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
+train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
+
+print("Train", train_data_segmented)
+print("Test", test_data_segmented)
+
+TODO: UNCOMMENT THIS
+hdf5_file_path = 'hdf5_data.h5'
+
+with h5py.File(hdf5_file_path, 'w') as hdf_file:
+    dataset_group = hdf_file.create_group('dataset')
+    train_group = dataset_group.create_group('Train')
+    train_group.create_dataset('data', data=train_data_segmented.to_numpy())
+    test_group = dataset_group.create_group('Test')
+    test_group.create_dataset('data', data=test_data_segmented.to_numpy())
+
+    member1_group = hdf_file.create_group('Member1 name')
+    member1_group.create_dataset('data', data=data_member1.to_numpy())
+    member2_group = hdf_file.create_group('Member2 name')
+    member2_group.create_dataset('data', data=data_member2.to_numpy())
+    member3_group = hdf_file.create_group('Member3 name')
+    member3_group.create_dataset('data', data=data_member3.to_numpy())
+
 
 
 # PREPROCESSING - ALEX WALSH
@@ -126,9 +130,10 @@ pre_processing(segmented_data_member1)
 
 
 
-dataframe_features = []
+
 
 def feature_extraction(dataset):
+    dataframe_features = []
     # TODO: FINISH EXTRACTING 10 DIFFERENT FEATURES, CURRENTLY ONLY AT 8
     i = 0
     for dataframe in dataset:
@@ -147,6 +152,7 @@ def feature_extraction(dataset):
         dataframe_features.append(features)
 
         i = i + 1
+    return dataframe_features
 
 
 def normalize(dataframe):
