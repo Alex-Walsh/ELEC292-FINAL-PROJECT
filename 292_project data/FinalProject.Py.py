@@ -20,18 +20,21 @@ csv_member3 = "Alex_data.csv"
 data_member1 = pd.read_csv(csv_member1)
 data_member2 = pd.read_csv(csv_member2)
 data_member3 = pd.read_csv(csv_member3)
-
+print("DM1", data_member1)
 
 def segment_data(data, window_size):
     num_segments = data.shape[0] // window_size
     segments = [data.iloc[i * window_size:(i + 1) * window_size].reset_index(drop=True) for i in range(num_segments)]
-    return pd.concat(segments, ignore_index=True)
+    return segments
+    # print("Spd.concat(segments, axis=1))
+    # return pd.concat(segments, ignore_index=True)
 
 
 sampling_rate = 100
 window_size = 5 * sampling_rate
 
 segmented_data_member1 = segment_data(data_member1, window_size)
+print("SEGMENTED_DM1: ", segmented_data_member1)
 segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
 
@@ -103,19 +106,22 @@ def pre_processing(dataset):
 
     #SMA DONE
     #Now Going to fill missing values
-    for i in range(x_length):
-        if dataset.iloc[i, 1].isna():
+    # for i in range(x_length):
+    #     if dataset.iloc[i, 1].isna():
 
 #TODO: DETECT AND REMOVE OUTLIERS?
 
 
 #TODO: NORMALIZE DATA
+
+
+
 pre_processing(train_data_segmented)
 
 
 
-def feature_extraction_and_normalization(dataset):
-    #extract 10 different features from each time window
-    #Normalize
-    #TODO: EXTRACT 10 DIFFERENT FEATURES
-    #TODO: Z-SCORE STANDARDIZATION, MIN-MAX SCALING
+# def feature_extraction_and_normalization(dataset):
+#     #extract 10 different features from each time window
+#     #Normalize
+#     #TODO: EXTRACT 10 DIFFERENT FEATURES
+#     #TODO: Z-SCORE STANDARDIZATION, MIN-MAX SCALING
