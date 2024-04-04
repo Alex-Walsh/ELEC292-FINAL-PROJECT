@@ -175,22 +175,26 @@ pre_processing(create_and_combine_dataframes())
 
 def feature_extraction(dataset):
     dataframe_features = []
-    # TODO: FINISH EXTRACTING 10 DIFFERENT FEATURES, CURRENTLY ONLY AT 8
+    # TODO: FINISH EXTRACTING 10 DIFFERENT FEATURES, CURRENTLY ONLY AT 7
     i = 0
     for dataframe in dataset:
         # print("WINDOW: ", i, " :", dataframe.iloc[:,4])
         #FEATURE EXTRACTION
         # print("DATAFRAME: ", dataframe)
         abs_accel = dataframe
-        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median','range'])
-        features['mean'] = abs_accel.rolling(window=window_size).mean()
-        features['std'] = abs_accel.rolling(window=window_size).std()
-        features['max'] = abs_accel.rolling(window=window_size).max()
-        features['min'] = abs_accel.rolling(window=window_size).min()
+        # print("ABS_ACCEL: ",abs_accel)
+        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median'])
+        features['mean'] = abs_accel.mean()
+        features['mean'] = 2
+        print("mean: ", features['mean'])
+        features['std'] = abs_accel.std()
+        features['max'] = abs_accel.max()
+        features['min'] = abs_accel.min()
         features['skewness'] = abs_accel.skew()
         features['kurtosis'] = abs_accel.kurt()
         features['median'] = abs_accel.median()
-        features['range'] = abs_accel.rank()
+        # features['range'] = abs_accel.rank()
+        # print("FEATURES: ", features)
         dataframe_features.append(features)
 
         i = i + 1
@@ -198,30 +202,29 @@ def feature_extraction(dataset):
 
 
 def normalize(dataframe):
-    # normalized_data = []
-    # for frame in dataframe:
-    # print("FRAME: ", frame)
-    sc = preprocessing.StandardScaler()
-    # data = frame
+    normalized_data = []
+    for frame in dataframe:
+
+        sc = preprocessing.StandardScaler()
+        data = pd.DataFrame(frame.values)
+
         # print(f'mean before normalizing: {data.mean(axis=0)}')
         # print(f'std before normalizing: {data.std(axis=0)}')
-    return sc.fit_transform(dataframe)
+        dataset = sc.fit_transform(data)
         # print(f'mean after normalizing: {dataset.mean(axis=0).round()}')
         # print(f'std after normalizing: {dataset.std(axis=0).round()}')
-        # normalized_data.append(dataset)
+        normalized_data.append(dataset)
     return normalized_data
 
 
 def main_function():
     preprocessed_values = pre_processing(create_and_combine_dataframes())
+    # features = feature_extraction(preprocessed_values)
     features = feature_extraction(preprocessed_values)
     print(features)
-    # print(preprocessed_values)
-    for value in preprocessed_values:
-        print(normalize(value))
     normalized_values = normalize(preprocessed_values)
 
-    print(normalized_values)
+    # print(normalized_values)
 
 
 main_function()
