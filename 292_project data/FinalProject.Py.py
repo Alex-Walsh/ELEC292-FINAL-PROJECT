@@ -227,4 +227,6 @@ def main_function():
     # print(normalized_values)
 
 
+
+# now jayco is working
 main_function()
