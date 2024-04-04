@@ -124,20 +124,23 @@ def pre_processing(dataset):
     for dataframe in dataset:
 
         # print("DATAFRAME: ", dataframe.iloc[:, 2])
-        dataframe.drop(columns=["Acceleration x (m/s^2)","Acceleration y (m/s^2)", "Acceleration z (m/s^2)"])
+        # dataframe.drop(columns=["Acceleration x (m/s^2)","Acceleration y (m/s^2)", "Acceleration z (m/s^2)"])
     # acceleration does not change instantly, it changes gradually so I will use sample and hold imputation so that we can use that
 
     # noise reduction
     # TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
         sma_window_size = 5
     # print(dataset.iloc[:, 1])
-        y_data = dataframe.iloc[:,1]
+        y_data = dataframe.iloc[:,1:5]
         # print(y_data)
         y_sma5 = y_data.rolling(sma_window_size).mean()
         sma_window_size = 10
         y_sma10 = y_data.rolling(sma_window_size).mean()
-        print(y_sma10.iloc[10:-1])
-        return_array.append(y_sma10.iloc[10:-1])
+        # print("YSMA MEAN: ")
+
+        # print(y_sma10.iloc[10:-1])
+
+        return_array.append(y_sma10)
         x_length = len(dataframe)
         x_input = np.arange(x_length)
     # x_input = dataset.iloc[:, 0]
@@ -185,8 +188,6 @@ def feature_extraction(dataset):
         # print("ABS_ACCEL: ",abs_accel)
         features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median'])
         features['mean'] = abs_accel.mean()
-        features['mean'] = 2
-        print("mean: ", features['mean'])
         features['std'] = abs_accel.std()
         features['max'] = abs_accel.max()
         features['min'] = abs_accel.min()
@@ -206,8 +207,8 @@ def normalize(dataframe):
     for frame in dataframe:
 
         sc = preprocessing.StandardScaler()
-        data = pd.DataFrame(frame.values)
-
+        data = pd.DataFrame(frame)
+        data = data.iloc[10:-1, :]
         # print(f'mean before normalizing: {data.mean(axis=0)}')
         # print(f'std before normalizing: {data.std(axis=0)}')
         dataset = sc.fit_transform(data)
@@ -221,10 +222,11 @@ def main_function():
     preprocessed_values = pre_processing(create_and_combine_dataframes())
     # features = feature_extraction(preprocessed_values)
     features = feature_extraction(preprocessed_values)
+    # print("PREPROCESSED: ", preprocessed_values)
+    # print("SINGLE: ", segmented_data_member1)
     print(features)
     normalized_values = normalize(preprocessed_values)
-
-    # print(normalized_values)
+    print(normalized_values)
 
 
 
