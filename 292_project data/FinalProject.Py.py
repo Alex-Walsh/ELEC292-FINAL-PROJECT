@@ -186,7 +186,7 @@ def feature_extraction(dataset):
         # print("DATAFRAME: ", dataframe)
         abs_accel = dataframe
         # print("ABS_ACCEL: ",abs_accel)
-        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median'])
+        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median', 'sum', 'variance'])
         features['mean'] = abs_accel.mean()
         features['std'] = abs_accel.std()
         features['max'] = abs_accel.max()
@@ -194,6 +194,8 @@ def feature_extraction(dataset):
         features['skewness'] = abs_accel.skew()
         features['kurtosis'] = abs_accel.kurt()
         features['median'] = abs_accel.median()
+        features['sum'] = abs_accel.sum()
+        features['variance'] = abs_accel.var()
         # features['range'] = abs_accel.rank()
         # print("FEATURES: ", features)
         dataframe_features.append(features)
