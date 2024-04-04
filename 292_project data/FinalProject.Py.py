@@ -55,15 +55,18 @@ def create_and_combine_dataframes():
     segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
     combined_segmented_data = []
     for member in segmented_data_member1:
+        member = pd.DataFrame(member)
         combined_segmented_data.append(member)
-    for member in segmented_data_member2:
-        combined_segmented_data.append(member)
+    # for member in segmented_data_member2:
+    #     member = pd.DataFrame(member)
+    #     combined_segmented_data.append(member)
     for member in segmented_data_member3:
+        member = pd.DataFrame(member)
         combined_segmented_data.append(member)
-    print("COMBINED AND SEGMENTED: ", combined_segmented_data)
+    #print("COMBINED AND SEGMENTED: ", combined_segmented_data)
     return combined_segmented_data
 
-create_and_combine_dataframes()
+
 
 
 # combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
@@ -114,34 +117,42 @@ def pre_processing(dataset):
     #https://www.w3schools.com/python/pandas/pandas_dataframes.asp -> documentation for pandas
     #https://www.w3schools.com/python/python_functions.asp documentation of python functions
 
-    #using sample and hold imputation
-    #Doing Dimension Reduction, I am getting rid of the individual directional vectors values, as the absolute acceleration is a product of those values combined
-    dataset = pd.DataFrame(dataset)
-    dataset = dataset.drop(columns=["Linear Acceleration x (m/s^2)","Linear Acceleration y (m/s^2)", "Linear Acceleration z (m/s^2)" , "Acceleration x (m/s^2)","Acceleration y (m/s^2)","Acceleration z (m/s^2)"])
-    #acceleration does not change instantly, it changes gradually so I will use sample and hold imputation so that we can use that
+    # using sample and hold imputation
+    # Doing Dimension Reduction, I am getting rid of the individual directional vectors values, as the absolute acceleration is a product of those values combined
+    # dataset = pd.DataFrame(dataset)
+    return_array = []
+    for dataframe in dataset:
 
-    #noise reduction
-#TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
-    sma_window_size = 5
+        # print("DATAFRAME: ", dataframe.iloc[:, 2])
+        dataframe.drop(columns=["Acceleration x (m/s^2)","Acceleration y (m/s^2)", "Acceleration z (m/s^2)"])
+    # acceleration does not change instantly, it changes gradually so I will use sample and hold imputation so that we can use that
+
+    # noise reduction
+    # TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
+        sma_window_size = 5
     # print(dataset.iloc[:, 1])
-    y_data = dataset.iloc[:,1]
-    print(y_data)
-    y_sma5 = y_data.rolling(sma_window_size).mean()
-    sma_window_size = 10
-    y_sma10 = y_data.rolling(sma_window_size).mean()
-    x_length = len(dataset)
-    x_input = np.arange(x_length)
+        y_data = dataframe.iloc[:,1]
+        # print(y_data)
+        y_sma5 = y_data.rolling(sma_window_size).mean()
+        sma_window_size = 10
+        y_sma10 = y_data.rolling(sma_window_size).mean()
+        print(y_sma10.iloc[10:-1])
+        return_array.append(y_sma10.iloc[10:-1])
+        x_length = len(dataframe)
+        x_input = np.arange(x_length)
     # x_input = dataset.iloc[:, 0]
-    print("X-AXIS", x_input)
+    #     print("X-AXIS", x_input)
 
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(x_input, y_data.to_numpy(), linewidth=2)
-    ax.plot(x_input, y_sma5.to_numpy(), linewidth = 2)
-    ax.plot(x_input, y_sma10.to_numpy(), linewidth=2)
-    ax.legend(['NOISY', 'SMA5', 'SMA40'])
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Amplitude')
-    plt.show()
+    return return_array
+
+    # fig, ax = plt.subplots(figsize=(10,10))
+    # ax.plot(x_input, y_data.to_numpy(), linewidth=2)
+    # ax.plot(x_input, y_sma5.to_numpy(), linewidth = 2)
+    # ax.plot(x_input, y_sma10.to_numpy(), linewidth=2)
+    # ax.legend(['NOISY', 'SMA5', 'SMA40'])
+    # ax.set_xlabel('Time')
+    # ax.set_ylabel('Amplitude')
+    # plt.show()
     # print(dataset)
 
     #SMA DONE
@@ -151,8 +162,6 @@ def pre_processing(dataset):
 
 #TODO: DETECT AND REMOVE OUTLIERS?
 
-
-#TODO: NORMALIZE DATA
 
 
 
@@ -171,7 +180,8 @@ def feature_extraction(dataset):
     for dataframe in dataset:
         # print("WINDOW: ", i, " :", dataframe.iloc[:,4])
         #FEATURE EXTRACTION
-        abs_accel = dataframe.iloc[:,4]
+        # print("DATAFRAME: ", dataframe)
+        abs_accel = dataframe
         features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median','range'])
         features['mean'] = abs_accel.rolling(window=window_size).mean()
         features['std'] = abs_accel.rolling(window=window_size).std()
@@ -188,20 +198,30 @@ def feature_extraction(dataset):
 
 
 def normalize(dataframe):
-    for frame in dataframe:
-        sc = preprocessing.StandardScaler()
-        data = frame.iloc[:, 1:5]
-        print(f'mean before normalizing: {data.mean(axis=0)}')
-        print(f'std before normalizing: {data.std(axis=0)}')
-        dataset = sc.fit_transform(data)
-        print(f'mean after normalizing: {dataset.mean(axis=0).round()}')
-        print(f'std after normalizing: {dataset.std(axis=0).round()}')
-
-
+    # normalized_data = []
+    # for frame in dataframe:
+    # print("FRAME: ", frame)
+    sc = preprocessing.StandardScaler()
+    # data = frame
+        # print(f'mean before normalizing: {data.mean(axis=0)}')
+        # print(f'std before normalizing: {data.std(axis=0)}')
+    return sc.fit_transform(dataframe)
+        # print(f'mean after normalizing: {dataset.mean(axis=0).round()}')
+        # print(f'std after normalizing: {dataset.std(axis=0).round()}')
+        # normalized_data.append(dataset)
+    return normalized_data
 
 
 def main_function():
+    preprocessed_values = pre_processing(create_and_combine_dataframes())
+    features = feature_extraction(preprocessed_values)
+    print(features)
+    # print(preprocessed_values)
+    for value in preprocessed_values:
+        print(normalize(value))
+    normalized_values = normalize(preprocessed_values)
 
-    feature_extraction(segmented_data_member1)
-    normalize(segmented_data_member1)
+    print(normalized_values)
 
+
+main_function()
