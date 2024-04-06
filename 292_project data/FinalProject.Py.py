@@ -11,6 +11,18 @@ import h5py
 from sklearn import preprocessing
 
 from sklearn.model_selection import train_test_split
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, recall_score, confusion_matrix, ConfusionMatrixDisplay, roc_curve, \
+    RocCurveDisplay, roc_auc_score, f1_score
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.inspection import DecisionBoundaryDisplay
+from sklearn.decomposition import PCA
+
+
 
 # STEP 2 - HET
 
@@ -45,18 +57,15 @@ segmented_data_member3 = segment_data(data_member3, window_size)
 segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
 segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
 
-def create_and_combine_dataframes_individual():
+# def create_and_combine_dataframes_individual():
 
-    data_member1_jumping = pd.read_csv("Jumping-Raw Data.csv")
-    jumping_column = [0] * len(data_member1_jumping)
-    print("JUMPING COLUMN: ", jumping_column)
-    new_column_data = {'label': jumping_column}
-    new_column_df = pd.DataFrame(new_column_data)
-    # # Label Data
-    data_member1_jumping.insert(5, 'label', new_column_data['label'])
-    # data_member1_jumping[:, 5] = 0
-    # print(data_member1_jumping)
-    # data_member2_walking = pd.read_csv("Walking-Raw Data.csv")
+def full_set_labeling(dataset, movement_type):
+    dataset = pd.DataFrame(dataset)
+    if movement_type == 'walking':
+        dataset.insert(0, 'label', 0)
+    if movement_type == 'jumping':
+        dataset.insert(0, 'label', 1)
+    return dataset
 
 
 def labeling(dataset, movement_type):
@@ -193,7 +202,7 @@ def pre_processing(dataset):
 
 
 
-pre_processing(create_and_combine_dataframes())
+# pre_processing(create_and_combine_dataframes())
 
 
 
@@ -245,11 +254,59 @@ def normalize(dataframe):
     return normalized_data
 
 
-def classifier(dataset):
+def classifier():
 
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
-    print(dataset)
+    walking_dataset = full_set_labeling(data_member4_walking, "walking")
+    jumping_dataset = full_set_labeling(data_member4_jumping, "jumping")
+    combined_dataset = walking_dataset + jumping_dataset
+    scaler = StandardScaler()
+    l_reg = LogisticRegression(max_iter=10000)
+    clf = make_pipeline(StandardScaler(), l_reg)
 
+
+    # Need to combine datasets and shuffle them
+    frames = [walking_dataset,jumping_dataset]
+    full_frame = pd.concat(frames)
+
+
+    labels = full_frame.iloc[:,0]
+    features = full_frame.iloc[:,1:]
+    X_train, X_test, Y_train, Y_test = train_test_split(features, labels, test_size=0.1, random_state=0, shuffle=True)
+    # print(X_train)
+    # print(Y_train)
+    clf.fit(X_train, Y_train)
+
+    Y_pred = clf.predict(X_test)
+    y_clf_prob = clf.predict_proba(X_test)
+
+    acc = accuracy_score(Y_test, Y_pred)
+    print("accuracy is: ", acc)
+
+    recall = recall_score(Y_test, Y_pred)
+    print("recall is: ", recall)
+
+    cm = confusion_matrix(Y_test, Y_pred)
+    cm_display = ConfusionMatrixDisplay(cm).plot()
+    plt.show()
+
+    fpr, tpr, _ = roc_curve(Y_test, y_clf_prob[:, 1], pos_label=clf.classes_[1])
+    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr).plot()
+    plt.show()
+
+    f1 = f1_score(Y_test, Y_pred)
+    print("The F1 Score is: ", f1)
+
+    auc = roc_auc_score(Y_test, y_clf_prob[:, 1])
+    print("The AUC is: ", auc)
+
+
+    # print(dataset)
+
+
+
+def graphical_user_interface():
+    
 
 
 def main_function():
@@ -262,10 +319,14 @@ def main_function():
     normalized_values = normalize(preprocessed_values)
     # print(normalized_values)
     # classifier(normalized_values)
-    create_and_combine_dataframes_individual()
+    # create_and_combine_dataframes_individual()
     sampling_rate = 100
     window_size = 5 * sampling_rate
-    labeling(segment_data(data_member4_walking, window_size), "walking")
+    # labeling(segment_data(data_member4_walking, window_size), "walking")
     # print(data_member4_walking)
+    classifier()
+
+
+
 # now jayco is working
 main_function()
