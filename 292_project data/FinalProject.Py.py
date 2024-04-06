@@ -45,6 +45,31 @@ segmented_data_member3 = segment_data(data_member3, window_size)
 segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
 segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
 
+def create_and_combine_dataframes_individual():
+
+    data_member1_jumping = pd.read_csv("Jumping-Raw Data.csv")
+    jumping_column = [0] * len(data_member1_jumping)
+    print("JUMPING COLUMN: ", jumping_column)
+    new_column_data = {'label': jumping_column}
+    new_column_df = pd.DataFrame(new_column_data)
+    # # Label Data
+    data_member1_jumping.insert(5, 'label', new_column_data['label'])
+    # data_member1_jumping[:, 5] = 0
+    # print(data_member1_jumping)
+    # data_member2_walking = pd.read_csv("Walking-Raw Data.csv")
+
+
+def labeling(dataset, movement_type):
+    return_dataframe = []
+    for frame in dataset:
+        if movement_type == 'walking':
+            frame.insert(0, 'label', 0)
+            return_dataframe.append(frame)
+        if movement_type == 'jumping':
+            frame.insert(0, 'label', 1)
+            return_dataframe.append(frame)
+    return return_dataframe
+
 def create_and_combine_dataframes():
     sampling_rate = 100
     window_size = 5 * sampling_rate
@@ -220,17 +245,27 @@ def normalize(dataframe):
     return normalized_data
 
 
+def classifier(dataset):
+
+    # CLASSIFY INTO WALKING AND JUMPING CLASSES
+    print(dataset)
+
+
+
 def main_function():
     preprocessed_values = pre_processing(create_and_combine_dataframes())
     # features = feature_extraction(preprocessed_values)
     features = feature_extraction(preprocessed_values)
     # print("PREPROCESSED: ", preprocessed_values)
     # print("SINGLE: ", segmented_data_member1)
-    print(features)
+    # print(features)
     normalized_values = normalize(preprocessed_values)
-    print(normalized_values)
-
-
-
+    # print(normalized_values)
+    # classifier(normalized_values)
+    create_and_combine_dataframes_individual()
+    sampling_rate = 100
+    window_size = 5 * sampling_rate
+    labeling(segment_data(data_member4_walking, window_size), "walking")
+    # print(data_member4_walking)
 # now jayco is working
 main_function()
