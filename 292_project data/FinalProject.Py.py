@@ -8,8 +8,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 import h5py
+import requests
+from tkinter import filedialog
+from tkinter import *
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+NavigationToolbar2Tk)
 from sklearn import preprocessing
-
+import tkinter as tk
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -67,6 +73,16 @@ def full_set_labeling(dataset, movement_type):
         dataset.insert(0, 'label', 1)
     return dataset
 
+
+
+def determine_array_average(input_array):
+    return_array = []
+    for array in input_array:
+        if sum(array)/len(array) >= 0.5:
+            return_array.append(1)
+        else:
+            return_array.append(0)
+    return return_array
 
 def labeling(dataset, movement_type):
     return_dataframe = []
@@ -301,18 +317,108 @@ def classifier():
     print("The AUC is: ", auc)
 
 
+    testFile = segmented_data_member2
+    returnArray = []
+    for frame in testFile:
+        # print("FRAME: ", frame)
+        # print("PREDICTION: ", clf.predict(frame))
+        returnArray.append(clf.predict(frame))
+
+    print(returnArray)
+    return returnArray
+
+
+def graph_data():
+    y_data = determine_array_average(classifier())
+    plt.plot(y_data)
+    plt.show()
     # print(dataset)
 
+def UploadAction(event=None):
+    filename = filedialog.askopenfilename()
+    # print(filename)
+    print('Selected:', filename)
 
+
+def plot():
+    # the figure that will contain the plot
+    fig = Figure(figsize=(5, 5),
+                 dpi=100)
+
+    # list of squares
+    y = [i ** 2 for i in range(101)]
+
+    # adding the subplot
+    plot1 = fig.add_subplot(111)
+
+    # plotting the graph
+    plot1.plot(y)
+
+    # creating the Tkinter canvas
+    # containing the Matplotlib figure
+    canvas = FigureCanvasTkAgg(fig,
+                               master = window)
+    canvas.draw()
+
+    # placing the canvas on the Tkinter window
+    canvas.get_tk_widget().pack()
+
+    # creating the Matplotlib toolbar
+    toolbar = NavigationToolbar2Tk(canvas, window)
+    toolbar.update()
+
+    # placing the toolbar on the Tkinter window
+    canvas.get_tk_widget().pack()
 
 def graphical_user_interface():
+    # How i learned tkinter as it was not taught in the course
+    # https: // realpython.com / python - gui - tkinter /  # building-your-first-python-gui-application-with-tkinter
+    # Learning how to import files in tkinter
+    # https://dev.to/jairajsahgal/creating-a-file-uploader-in-python-18e0
+    graph_data()
+
+
+
+    # window = tk.Tk()
+    # window.title('292 Final Project')
+    # window.geometry("500x500")
+    # openingStatement = tk.Label(text="Welcome To Our Final Project for 292")
+    # openingStatement.pack()
+    # button = tk.Button(window, text='Open', command=UploadAction)
+    # button.pack()
+    window = Tk()
+
+    # setting the title
+    window.title('Plotting in Tkinter')
+
+    # dimensions of the main window
+    window.geometry("500x500")
+
+    fig = Figure(figsize=(5, 5), dpi = 100)
+    y = determine_array_average(classifier())
+    plot1 = fig.add_subplot(111)
+    plot1.plot(y)
+    canvas = FigureCanvasTkAgg(fig,
+                               master=window)
+    canvas.draw()
+
+    canvas.get_tk_widget().pack()
     
+
+
+
+
+    # run the gui
+    window.mainloop()
+
+
 
 
 def main_function():
     preprocessed_values = pre_processing(create_and_combine_dataframes())
     # features = feature_extraction(preprocessed_values)
     features = feature_extraction(preprocessed_values)
+    print(features)
     # print("PREPROCESSED: ", preprocessed_values)
     # print("SINGLE: ", segmented_data_member1)
     # print(features)
@@ -324,8 +430,9 @@ def main_function():
     window_size = 5 * sampling_rate
     # labeling(segment_data(data_member4_walking, window_size), "walking")
     # print(data_member4_walking)
-    classifier()
 
+    # classifier()
+    graphical_user_interface()
 
 
 # now jayco is working
