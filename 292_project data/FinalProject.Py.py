@@ -270,7 +270,7 @@ def normalize(dataframe):
     return normalized_data
 
 
-def classifier():
+def classifier(segmented_data):
 
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
     walking_dataset = full_set_labeling(data_member4_walking, "walking")
@@ -317,7 +317,8 @@ def classifier():
     print("The AUC is: ", auc)
 
 
-    testFile = segmented_data_member2
+    # testFile = segmented_data_member3
+    testFile = segmented_data
     returnArray = []
     for frame in testFile:
         # print("FRAME: ", frame)
@@ -334,76 +335,85 @@ def graph_data():
     plt.show()
     # print(dataset)
 
+
+def generate_csv(values):
+
+    time_intervals = []
+    running_or_jumping = []
+    front_counter = 0
+    back_counter = 5
+
+    for value in values:
+        time_intervals.append("Time {}-{}".format(front_counter, back_counter))
+        front_counter = front_counter + 5
+        back_counter = back_counter + 5
+        if value == 1:
+            running_or_jumping.append("jumping")
+        else:
+            running_or_jumping.append("running")
+    # print(time_intervals)
+    # print(running_or_jumping)
+
+    return_dataframe = {
+        "time_intervals": time_intervals,
+        "running_or_jumping": running_or_jumping
+    }
+
+    return_dataframe = pd.DataFrame(return_dataframe)
+    return_dataframe.to_csv("outputCSV", sep=',', index=True, encoding='utf-8')
+
+
+
+
+
+
 def UploadAction(event=None):
+    window = Tk()
     filename = filedialog.askopenfilename()
+    file_to_segment = pd.read_csv(filename)
+    file_to_segment = segment_data(file_to_segment, 500)
+
+
     # print(filename)
     print('Selected:', filename)
-
-
-def plot():
-    # the figure that will contain the plot
-    fig = Figure(figsize=(5, 5),
-                 dpi=100)
-
-    # list of squares
-    y = [i ** 2 for i in range(101)]
-
-    # adding the subplot
+    fig = Figure(figsize=(5, 5), dpi=100)
+    y = determine_array_average(classifier(file_to_segment))
+    generate_csv(y)
     plot1 = fig.add_subplot(111)
-
-    # plotting the graph
     plot1.plot(y)
 
-    # creating the Tkinter canvas
-    # containing the Matplotlib figure
     canvas = FigureCanvasTkAgg(fig,
-                               master = window)
+                               master=window)
     canvas.draw()
 
-    # placing the canvas on the Tkinter window
     canvas.get_tk_widget().pack()
 
-    # creating the Matplotlib toolbar
-    toolbar = NavigationToolbar2Tk(canvas, window)
-    toolbar.update()
 
-    # placing the toolbar on the Tkinter window
-    canvas.get_tk_widget().pack()
 
 def graphical_user_interface():
     # How i learned tkinter as it was not taught in the course
     # https: // realpython.com / python - gui - tkinter /  # building-your-first-python-gui-application-with-tkinter
     # Learning how to import files in tkinter
     # https://dev.to/jairajsahgal/creating-a-file-uploader-in-python-18e0
-    graph_data()
 
 
 
-    # window = tk.Tk()
-    # window.title('292 Final Project')
-    # window.geometry("500x500")
-    # openingStatement = tk.Label(text="Welcome To Our Final Project for 292")
-    # openingStatement.pack()
-    # button = tk.Button(window, text='Open', command=UploadAction)
-    # button.pack()
+
     window = Tk()
-
-    # setting the title
-    window.title('Plotting in Tkinter')
-
-    # dimensions of the main window
+    window.title('292 Final Project')
     window.geometry("500x500")
+    opening_statement = tk.Label(text="Welcome To Our Final Project for 292")
+    opening_statement.pack()
+    button = tk.Button(window, text='Upload File', command=UploadAction)
+    button.pack()
 
-    fig = Figure(figsize=(5, 5), dpi = 100)
-    y = determine_array_average(classifier())
-    plot1 = fig.add_subplot(111)
-    plot1.plot(y)
-    canvas = FigureCanvasTkAgg(fig,
-                               master=window)
-    canvas.draw()
 
-    canvas.get_tk_widget().pack()
-    
+
+
+
+
+
+
 
 
 
