@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 import h5py
 import requests
+from scipy import stats
 from tkinter import filedialog
 from tkinter import *
 from matplotlib.figure import Figure
@@ -28,9 +29,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.decomposition import PCA
 
-
-
-# STEP 2 - HET
+# FILES FOR TRAINING
 
 csv_member1 = "het_data.csv"
 csv_member2 = "Chengxi_data.csv"
@@ -43,13 +42,15 @@ data_member4_walking = pd.read_csv("Walking-Raw Data.csv")
 data_member4_jumping = pd.read_csv("Jumping-Raw Data.csv")
 
 
+
+
+
+
+# segment_data returns an array of segmented data
 def segment_data(data, window_size):
     num_segments = data.shape[0] // window_size
     segments = [data.iloc[i * window_size:(i + 1) * window_size].reset_index(drop=True) for i in range(num_segments)]
-    # segments = pd.DataFrame(segments)
     return segments
-    # print("Spd.concat(segments, axis=1))
-    # return pd.concat(segments, ignore_index=True)
 
 #Global Variables
 
@@ -63,7 +64,6 @@ segmented_data_member3 = segment_data(data_member3, window_size)
 segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
 segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
 
-# def create_and_combine_dataframes_individual():
 
 def full_set_labeling(dataset, movement_type):
     dataset = pd.DataFrame(dataset)
@@ -72,7 +72,6 @@ def full_set_labeling(dataset, movement_type):
     if movement_type == 'jumping':
         dataset.insert(0, 'label', 1)
     return dataset
-
 
 
 def determine_array_average(input_array):
@@ -84,20 +83,8 @@ def determine_array_average(input_array):
             return_array.append(0)
     return return_array
 
-def labeling(dataset, movement_type):
-    return_dataframe = []
-    for frame in dataset:
-        if movement_type == 'walking':
-            frame.insert(0, 'label', 0)
-            return_dataframe.append(frame)
-        if movement_type == 'jumping':
-            frame.insert(0, 'label', 1)
-            return_dataframe.append(frame)
-    return return_dataframe
 
 def create_and_combine_dataframes():
-    sampling_rate = 100
-    window_size = 5 * sampling_rate
     segmented_data_member1 = segment_data(data_member1, window_size)
     segmented_data_member2 = segment_data(data_member2, window_size)
     segmented_data_member3 = segment_data(data_member3, window_size)
@@ -119,10 +106,6 @@ def create_and_combine_dataframes():
 
 
 
-# combined_segmented_data = pd.concat([segmented_data_member1, segmented_data_member2, segmented_data_member3],
-#                                     ignore_index=True)
-
-#Combining Data
 #https://www.w3schools.com/python/python_for_loops.asp
 
 
@@ -158,10 +141,123 @@ def create_and_combine_dataframes():
 
 # PREPROCESSING - ALEX WALSH
 
-#There are missing values, to deal with the missing values I will use sample and hold imputation
-
-
+#If There are missing values, to deal with the missing values I will use sample and hold imputation
 #https://stackoverflow.com/questions/7696924/how-do-i-create-multiline-comments-in-python
+
+
+time_column = 'Time (s)'
+axis_of_interest = 'Linear Acceleration y (m/s^2)'
+
+plt.style.use('seaborn-darkgrid')
+plt.rcParams.update({'font.size': 12})
+
+fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
+
+def plot_walking_vs_jumping(walking_data, jumping_data):
+
+    walking_data = pd.DataFrame(walking_data)
+    jumping_data = pd.DataFrame(jumping_data)
+    walking_data_x = walking_data.iloc[:, 1]
+    walking_data_y = walking_data.iloc[:, 2]
+    walking_data_z = walking_data.iloc[:, 3]
+    walking_data_abs = walking_data.iloc[:, 4]
+    jumping_data_x = jumping_data.iloc[:, 1]
+    jumping_data_y = jumping_data.iloc[:, 2]
+    jumping_data_z = jumping_data.iloc[:, 3]
+    jumping_data_abs = jumping_data.iloc[:, 4]
+    walking_data_abs = walking_data.iloc[:, 4]
+
+
+    axs[0,0].plot(jumping_data_x, "b--" , walking_data_x, "r--")
+    axs[0, 0].set_title("X Acceleration")
+
+    axs[0, 1].plot(jumping_data_y, "b--", walking_data_y, "r--")
+    axs[0, 1].set_title("Y Acceleration")
+
+    axs[1, 0].plot(jumping_data_z, "b--", walking_data_z, "r--")
+    axs[1, 0].set_title("Z Acceleration")
+
+    axs[1, 1].plot(jumping_data_abs, "b--", walking_data_abs, "r--")
+    axs[1, 1].set_title("Absolute Acceleration")
+
+
+
+
+    plt.show()
+
+
+
+
+
+
+
+# def plot_member_data(ax, data, member_label, color):
+#
+#     data = data[data[time_column] <= 300]
+#
+#     ax.plot(data[time_column], data[axis_of_interest], label=f'{member_label}', linewidth=2, color=color)
+#     ax.set_title(f'{member_label} - {axis_of_interest} over Time')
+#     ax.set_xlabel('')
+#     ax.set_ylabel(f'{axis_of_interest} (m/s^2)')
+#
+#     ax.legend(loc='upper right', frameon=True, shadow=True)
+#     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+#     ax.set_facecolor('#f5f5f5')  # light grey background color
+#
+#
+# plot_member_data(axs[0], data_member1, 'Het', 'blue')
+# plot_member_data(axs[1], data_member2, 'Alexander', 'green')
+# plot_member_data(axs[2], data_member3, 'Chengxi', 'red')
+#
+#
+# plt.tight_layout()
+# plt.show()
+
+
+# time_column = 'Time (s)'
+# axis_of_interest = 'Acceleration_y'
+# plt.style.use('seaborn-darkgrid')
+# plt.rcParams.update({'font.size': 12})
+# fig, axs = plt.subplots(3, 1, figsize=(15, 18), sharex=True)
+
+
+# def plot_member_data(ax, data, member_label, color):
+#     data = data[data[time_column] <= 300]
+#
+#     ax.plot(data[time_column], data[axis_of_interest], label=f'{member_label}', linewidth=2, color=color)
+#     ax.set_title(f'{member_label} - {axis_of_interest} over Time')
+#     ax.set_xlabel('')
+#     ax.set_ylabel(f'{axis_of_interest} (m/s^2)')
+#
+#     ax.legend(loc='upper right', frameon=True, shadow=True)
+#     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+#     ax.set_facecolor('#f5f5f5')  # light grey background color
+#
+#
+# def graph_member_data():
+#     plot_member_data(axs[0], data_member1, 'Het', 'blue')
+#     plot_member_data(axs[1], data_member2, 'Alexander', 'green')
+#     plot_member_data(axs[2], data_member3, 'Chengxi', 'red')
+#
+#     plt.tight_layout()
+#     plt.show()
+
+
+def remove_outliers(dataset):
+    return_array = []
+    for dataframe in dataset:
+        z = np.abs(stats.zscore(dataframe["Absolute acceleration (m/s^2)"]))
+        Q1 = dataframe["Absolute acceleration (m/s^2)"].quantile(0.25)
+        Q3 = dataframe["Absolute acceleration (m/s^2)"].quantile(0.75)
+        IQR = Q3 - Q1
+
+        # identify outliers
+        threshold = 1.5
+        outliers = dataframe[(dataframe["Absolute acceleration (m/s^2)"] < Q1 - threshold * IQR) | (dataframe["Absolute acceleration (m/s^2)"] > Q3 + threshold * IQR)]
+        dataframe = dataframe.drop(outliers.index)
+        dataframe.loc[z > threshold, "Absolute acceleration (m/s^2)"] = dataframe["Absolute acceleration (m/s^2)"].median()
+        return_array.append(dataframe)
+    return return_array
 
 def pre_processing(dataset):
     #https://www.w3schools.com/python/pandas/pandas_dataframes.asp -> documentation for pandas
@@ -170,59 +266,45 @@ def pre_processing(dataset):
     # using sample and hold imputation
     # Doing Dimension Reduction, I am getting rid of the individual directional vectors values, as the absolute acceleration is a product of those values combined
     # dataset = pd.DataFrame(dataset)
+    # outlier removal
+    dataset = remove_outliers(dataset)
     return_array = []
+    full_dataframe = pd.DataFrame()
     for dataframe in dataset:
-
-        # print("DATAFRAME: ", dataframe.iloc[:, 2])
-        # dataframe.drop(columns=["Acceleration x (m/s^2)","Acceleration y (m/s^2)", "Acceleration z (m/s^2)"])
-    # acceleration does not change instantly, it changes gradually so I will use sample and hold imputation so that we can use that
-
     # noise reduction
     # TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
-        sma_window_size = 5
-    # print(dataset.iloc[:, 1])
-        y_data = dataframe.iloc[:,1:5]
-        # print(y_data)
-        y_sma5 = y_data.rolling(sma_window_size).mean()
+        y_data = dataframe.iloc[:, 0:5]
         sma_window_size = 10
         y_sma10 = y_data.rolling(sma_window_size).mean()
-        # print("YSMA MEAN: ")
-
-        # print(y_sma10.iloc[10:-1])
-
         return_array.append(y_sma10)
-        x_length = len(dataframe)
-        x_input = np.arange(x_length)
-    # x_input = dataset.iloc[:, 0]
-    #     print("X-AXIS", x_input)
+        mergers = [full_dataframe, y_sma10]
+        full_dataframe = pd.concat(mergers)
+
+    fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
+
+
+    data_x = full_dataframe.iloc[:, 1]
+    print("data x: ", data_x)
+    data_y = full_dataframe.iloc[:, 2]
+    data_z = full_dataframe.iloc[:, 3]
+    data_abs = full_dataframe.iloc[:, 4]
+
+
+    axs[0, 0].plot(data_x, "b--", data_x, "r--")
+    axs[0, 0].set_title("X Acceleration SMA 10")
+
+    axs[0, 1].plot(data_y, "b--", data_y, "r--")
+    axs[0, 1].set_title("Y Acceleration SMA 10")
+
+    axs[1, 0].plot(data_z, "b--", data_z, "r--")
+    axs[1, 0].set_title("Z Acceleration SMA 10")
+
+    axs[1, 1].plot(data_abs, "b--", data_abs, "r--")
+    axs[1, 1].set_title("Absolute Acceleration SMA 10")
+
+    plt.show()
 
     return return_array
-
-    # fig, ax = plt.subplots(figsize=(10,10))
-    # ax.plot(x_input, y_data.to_numpy(), linewidth=2)
-    # ax.plot(x_input, y_sma5.to_numpy(), linewidth = 2)
-    # ax.plot(x_input, y_sma10.to_numpy(), linewidth=2)
-    # ax.legend(['NOISY', 'SMA5', 'SMA40'])
-    # ax.set_xlabel('Time')
-    # ax.set_ylabel('Amplitude')
-    # plt.show()
-    # print(dataset)
-
-    #SMA DONE
-    #Now Going to fill missing values
-    # for i in range(x_length):
-    #     if dataset.iloc[i, 1].isna():
-
-#TODO: DETECT AND REMOVE OUTLIERS?
-
-
-
-
-# pre_processing(create_and_combine_dataframes())
-
-
-
-
 
 
 
@@ -253,19 +335,13 @@ def feature_extraction(dataset):
         i = i + 1
     return dataframe_features
 
-
 def normalize(dataframe):
     normalized_data = []
     for frame in dataframe:
-
         sc = preprocessing.StandardScaler()
         data = pd.DataFrame(frame)
         data = data.iloc[10:-1, :]
-        # print(f'mean before normalizing: {data.mean(axis=0)}')
-        # print(f'std before normalizing: {data.std(axis=0)}')
         dataset = sc.fit_transform(data)
-        # print(f'mean after normalizing: {dataset.mean(axis=0).round()}')
-        # print(f'std after normalizing: {dataset.std(axis=0).round()}')
         normalized_data.append(dataset)
     return normalized_data
 
@@ -329,13 +405,6 @@ def classifier(segmented_data):
     return returnArray
 
 
-def graph_data():
-    y_data = determine_array_average(classifier())
-    plt.plot(y_data)
-    plt.show()
-    # print(dataset)
-
-
 def generate_csv(values):
 
     time_intervals = []
@@ -351,8 +420,6 @@ def generate_csv(values):
             running_or_jumping.append("jumping")
         else:
             running_or_jumping.append("running")
-    # print(time_intervals)
-    # print(running_or_jumping)
 
     return_dataframe = {
         "time_intervals": time_intervals,
@@ -363,15 +430,11 @@ def generate_csv(values):
     return_dataframe.to_csv("outputCSV", sep=',', index=True, encoding='utf-8')
 
 
-
-
-
-
-def UploadAction(event=None):
+def upload_file(event=None):
     window = Tk()
     filename = filedialog.askopenfilename()
     file_to_segment = pd.read_csv(filename)
-    file_to_segment = segment_data(file_to_segment, 500)
+    file_to_segment = segment_data(file_to_segment, window_size)
 
 
     # print(filename)
@@ -396,35 +459,21 @@ def graphical_user_interface():
     # Learning how to import files in tkinter
     # https://dev.to/jairajsahgal/creating-a-file-uploader-in-python-18e0
 
-
-
-
     window = Tk()
     window.title('292 Final Project')
     window.geometry("500x500")
     opening_statement = tk.Label(text="Welcome To Our Final Project for 292")
     opening_statement.pack()
-    button = tk.Button(window, text='Upload File', command=UploadAction)
+    button = tk.Button(window, text='Upload File', command=upload_file)
     button.pack()
-
-
-
-
-
-
-
-
-
-
-
 
     # run the gui
     window.mainloop()
 
 
-
-
 def main_function():
+    plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
+    print("COMBINED: ", create_and_combine_dataframes())
     preprocessed_values = pre_processing(create_and_combine_dataframes())
     # features = feature_extraction(preprocessed_values)
     features = feature_extraction(preprocessed_values)
@@ -433,17 +482,7 @@ def main_function():
     # print("SINGLE: ", segmented_data_member1)
     # print(features)
     normalized_values = normalize(preprocessed_values)
-    # print(normalized_values)
-    # classifier(normalized_values)
-    # create_and_combine_dataframes_individual()
-    sampling_rate = 100
-    window_size = 5 * sampling_rate
-    # labeling(segment_data(data_member4_walking, window_size), "walking")
-    # print(data_member4_walking)
-
-    # classifier()
+    classifier(normalized_values)
     graphical_user_interface()
 
-
-# now jayco is working
 main_function()
