@@ -115,33 +115,6 @@ def create_and_combine_dataframes(dataset1, dataset2):
 
 
 
-# TODO: UNCOMMENT THIS
-# print("COMBINED: ", combined_segmented_data)
-# shuffled_segmented_data = combined_segmented_data.sample(frac=1).reset_index(drop=True)
-# train_data_segmented, test_data_segmented = train_test_split(shuffled_segmented_data, test_size=0.1)
-
-# print("Train", train_data_segmented)
-# print("Test", test_data_segmented)
-
-# TODO: UNCOMMENT THIS
-
-def create_hdf5():
-    hdf5_file_path = 'hdf5_data.h5'
-
-    with h5py.File(hdf5_file_path, 'w') as hdf_file:
-        dataset_group = hdf_file.create_group('dataset')
-        train_group = dataset_group.create_group('Train')
-        train_group.create_dataset('data', data=train_data_segmented.to_numpy())
-        test_group = dataset_group.create_group('Test')
-        test_group.create_dataset('data', data=test_data_segmented.to_numpy())
-
-        member1_group = hdf_file.create_group('Member1 name')
-        member1_group.create_dataset('data', data=data_member1.to_numpy())
-        member2_group = hdf_file.create_group('Member2 name')
-        member2_group.create_dataset('data', data=data_member2.to_numpy())
-        member3_group = hdf_file.create_group('Member3 name')
-        member3_group.create_dataset('data', data=data_member3.to_numpy())
-
 
 
 
@@ -326,7 +299,7 @@ def pre_processing(dataset):
     full_dataframe = pd.DataFrame()
     for dataframe in dataset:
     # noise reduction
-    # TODO: MODIFY SO IT DOES PREPROCESSING ON EVERY DATASET
+
         y_data = dataframe.iloc[:, 0:5]
         sma_window_size = 10
         y_sma10 = y_data.rolling(sma_window_size).mean()
@@ -381,13 +354,27 @@ def feature_extraction(dataset):
         features['median'] = abs_accel.median()
         features['sum'] = abs_accel.sum()
         features['variance'] = abs_accel.var()
-        features['variance'] = abs_accel.iloc[:,4].max()-abs_accel.iloc[:,4].min()
+        features['range'] = abs_accel.iloc[:,4].max()-abs_accel.iloc[:,4].min()
         # features['range'] = abs_accel.rank()
         # print("FEATURES: ", features)
         dataframe_features.append(features)
 
         i = i + 1
     return dataframe_features
+
+
+def calculate_variance_total(dataset):
+    return_array = []
+    for frame in dataset:
+        frame = frame.iloc[:, 4]
+        return_array.append(frame.var())
+
+    print(sum(return_array)/len(return_array))
+    plt.plot(return_array)
+    plt.xlabel("5 Second Window")
+    plt.ylabel("Variance")
+    plt.title('Variance Plot of Input')
+    plt.show()
 
 
 def normalize_frame(dataset):
@@ -409,7 +396,8 @@ def normalize(dataframe):
 
 
 def classifier(segmented_data):
-
+    # print("VARIANCE OF INPUTTED DATASET = ", calculate_variance_total())
+    calculate_variance_total(segmented_data)
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
     walking_dataset = full_set_labeling(pre_processing_no_segmentation(data_member4_walking), "walking").iloc[10:]
     print("WAlking: ", walking_dataset)
@@ -509,6 +497,7 @@ def upload_file(event=None):
     plot1 = fig.add_subplot(111)
     plot1.plot(y)
 
+
     canvas = FigureCanvasTkAgg(fig,
                                master=window)
     canvas.draw()
@@ -536,7 +525,7 @@ def graphical_user_interface():
 
 
 def main_function():
-    create_hdf5()
+    # create_hdf5()
     plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
 
     preprocessed_values = pre_processing(create_and_combine_dataframes(segment_data(data_member1, window_size), segment_data(data_member2, window_size)))
