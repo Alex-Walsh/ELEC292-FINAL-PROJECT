@@ -71,6 +71,10 @@ segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
 segmented_data_member5_jumping = segment_data(data_member5_jumping, window_size)
 segmented_data_member5_walking = segment_data(data_member5_walking, window_size)
 
+
+
+
+
 def full_set_labeling(dataset, movement_type):
     dataset = pd.DataFrame(dataset)
     if movement_type == 'walking':
@@ -181,6 +185,25 @@ def plot_walking_vs_jumping(walking_data, jumping_data):
 
     plt.show()
 
+def remove_outliers_frame(dataset):
+
+    dataset = pd.DataFrame(dataset)
+    z = np.abs(stats.zscore(dataset["Absolute acceleration (m/s^2)"]))
+    Q1 = dataset["Absolute acceleration (m/s^2)"].quantile(0.25)
+    Q3 = dataset["Absolute acceleration (m/s^2)"].quantile(0.75)
+    IQR = Q3 - Q1
+
+        # identify outliers
+    threshold = 1.5
+    outliers = dataset[(dataset["Absolute acceleration (m/s^2)"] < Q1 - threshold * IQR) | (dataset["Absolute acceleration (m/s^2)"] > Q3 + threshold * IQR)]
+    dataframe = dataset.drop(outliers.index)
+    dataframe.loc[z > threshold, "Absolute acceleration (m/s^2)"] = dataframe[
+            "Absolute acceleration (m/s^2)"].median()
+    dataframe = dataframe.interpolate()
+    print("DATAFRAME: ", dataframe)
+    return dataframe
+
+
 def remove_outliers(dataset):
     return_array = []
     for dataframe in dataset:
@@ -198,6 +221,29 @@ def remove_outliers(dataset):
     return return_array
 
 
+def graph_all_axes_frame(dataframe):
+    full_dataframe = dataframe
+
+    fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
+
+    data_x = full_dataframe.iloc[:, 1]
+    data_y = full_dataframe.iloc[:, 2]
+    data_z = full_dataframe.iloc[:, 3]
+    data_abs = full_dataframe.iloc[:, 4]
+
+    axs[0, 0].plot(data_x, "b--", data_x, "r--")
+    axs[0, 0].set_title("X Acceleration NOISY")
+
+    axs[0, 1].plot(data_y, "b--", data_y, "r--")
+    axs[0, 1].set_title("Y Acceleration NOISY")
+
+    axs[1, 0].plot(data_z, "b--", data_z, "r--")
+    axs[1, 0].set_title("Z Acceleration NOISY")
+
+    axs[1, 1].plot(data_abs, "b--", data_abs, "r--")
+    axs[1, 1].set_title("Absolute Acceleration NOISY")
+
+    plt.show()
 def graph_all_axes(dataset):
     return_array = []
     full_dataframe = pd.DataFrame()
@@ -227,6 +273,41 @@ def graph_all_axes(dataset):
     axs[1, 1].set_title("Absolute Acceleration NOISY")
 
     plt.show()
+
+
+def pre_processing_no_segmentation(dataset):
+
+    graph_all_axes_frame(dataset)
+
+    dataset = remove_outliers_frame(dataset)
+    dataset = dataset.iloc[:, 0:5]
+    sma_window_size = 10
+    dataset = dataset.rolling(sma_window_size).mean()
+
+    fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
+
+    data_x = dataset.iloc[:, 1]
+    data_y = dataset.iloc[:, 2]
+    data_z = dataset.iloc[:, 3]
+    data_abs = dataset.iloc[:, 4]
+
+    axs[0, 0].plot(data_x, "b--", data_x, "r--")
+    axs[0, 0].set_title("X Acceleration SMA 10")
+
+    axs[0, 1].plot(data_y, "b--", data_y, "r--")
+    axs[0, 1].set_title("Y Acceleration SMA 10")
+
+    axs[1, 0].plot(data_z, "b--", data_z, "r--")
+    axs[1, 0].set_title("Z Acceleration SMA 10")
+
+    axs[1, 1].plot(data_abs, "b--", data_abs, "r--")
+    axs[1, 1].set_title("Absolute Acceleration SMA 10")
+
+    plt.show()
+    #Normalizing skewed the data too much and resulted in worse results
+    # dataset = normalize_frame(dataset)
+    return dataset
+
 
 def pre_processing(dataset):
     graph_all_axes(dataset)
@@ -304,6 +385,13 @@ def feature_extraction(dataset):
         i = i + 1
     return dataframe_features
 
+
+def normalize_frame(dataset):
+    sc = preprocessing.StandardScaler()
+    data = dataset.iloc[10:, :]
+    dataset = sc.fit_transform(data)
+    return dataset
+
 def normalize(dataframe):
     normalized_data = []
     for frame in dataframe:
@@ -315,23 +403,22 @@ def normalize(dataframe):
     return normalized_data
 
 
+
 def classifier(segmented_data):
 
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
-    # walking_dataset = full_set_labeling(preprocessed_values_walking, "walking")
-    # jumping_dataset = full_set_labeling(preprocessed_values_jumping, "jumping")
-    walking_dataset = pre_processing(
-        create_and_combine_dataframes(segmented_data_member5_walking, segmented_data_member4_walking))
-    jumping_dataset = pre_processing(
-        create_and_combine_dataframes(segmented_data_member5_jumping, segmented_data_member4_jumping))
-    combined_dataset = walking_dataset + jumping_dataset
+    walking_dataset = full_set_labeling(pre_processing_no_segmentation(data_member4_walking), "walking").iloc[10:]
+    print("WAlking: ", walking_dataset)
+    jumping_dataset = full_set_labeling(pre_processing_no_segmentation(data_member4_jumping), "jumping").iloc[10:]
+
+
     scaler = StandardScaler()
     l_reg = LogisticRegression(max_iter=10000)
     clf = make_pipeline(StandardScaler(), l_reg)
 
 
     # Need to combine datasets and shuffle them
-    frames = [walking_dataset,jumping_dataset]
+    frames = [walking_dataset, jumping_dataset]
     full_frame = pd.concat(frames)
 
 
@@ -377,7 +464,6 @@ def classifier(segmented_data):
     print(returnArray)
     return returnArray
 
-
 def generate_csv(values):
 
     time_intervals = []
@@ -408,6 +494,7 @@ def upload_file(event=None):
     filename = filedialog.askopenfilename()
     file_to_segment = pd.read_csv(filename)
     file_to_segment = segment_data(file_to_segment, window_size)
+
 
 
     # print(filename)
@@ -447,17 +534,13 @@ def graphical_user_interface():
 def main_function():
     plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
 
-    # preprocessed_values = pre_processing(create_and_combine_dataframes())
-    print("m5w", data_member5_walking)
+    preprocessed_values = pre_processing(create_and_combine_dataframes(segment_data(data_member1, window_size), segment_data(data_member2, window_size)))
+    
 
+    features = feature_extraction(preprocessed_values)
     # features = feature_extraction(preprocessed_values)
-    # features = feature_extraction(preprocessed_values)
-    #print(features)
-    # print("PREPROCESSED: ", preprocessed_values)
-    # print("SINGLE: ", segmented_data_member1)
-    # print(features)
-    # normalized_values = normalize(preprocessed_values)
-    # classifier(normalized_values)
+    print(features)
+
     graphical_user_interface()
 
 main_function()
