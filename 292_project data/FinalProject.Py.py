@@ -40,12 +40,8 @@ data_member2 = pd.read_csv(csv_member2)
 data_member3 = pd.read_csv(csv_member3)
 data_member4_walking = pd.read_csv("Walking-Raw Data.csv")
 data_member4_jumping = pd.read_csv("Jumping-Raw Data.csv")
-data_member5_jumping = pd.read_csv("jumping.csv")
 data_member5_walking = pd.read_csv("walking.csv")
-
-# preprocessed_values_walking = []
-# preprocessed_values_jumping = []
-
+data_member5_jumping = pd.read_csv("jumping.csv")
 
 
 
@@ -68,8 +64,7 @@ segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
 segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
 segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
-segmented_data_member5_jumping = segment_data(data_member5_jumping, window_size)
-segmented_data_member5_walking = segment_data(data_member5_walking, window_size)
+
 
 def full_set_labeling(dataset, movement_type):
     dataset = pd.DataFrame(dataset)
@@ -90,16 +85,23 @@ def determine_array_average(input_array):
     return return_array
 
 
-def create_and_combine_dataframes(dataset1, dataset2):
+def create_and_combine_dataframes():
+    segmented_data_member1 = segment_data(data_member1, window_size)
+    segmented_data_member2 = segment_data(data_member2, window_size)
+    segmented_data_member3 = segment_data(data_member3, window_size)
+    segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
+    segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
     combined_segmented_data = []
-    for member in dataset1:
-        print("MEMBER: ", member)
+    for member in segmented_data_member1:
         member = pd.DataFrame(member)
         combined_segmented_data.append(member)
-    for member in dataset2:
-        print("MEMBER: ", member)
+    # for member in segmented_data_member2:
+    #     member = pd.DataFrame(member)
+    #     combined_segmented_data.append(member)
+    for member in segmented_data_member3:
         member = pd.DataFrame(member)
         combined_segmented_data.append(member)
+    #print("COMBINED AND SEGMENTED: ", combined_segmented_data)
     return combined_segmented_data
 
 
@@ -179,7 +181,68 @@ def plot_walking_vs_jumping(walking_data, jumping_data):
     axs[1, 1].plot(jumping_data_abs, "b--", walking_data_abs, "r--")
     axs[1, 1].set_title("Absolute Acceleration")
 
+
+
+
     plt.show()
+
+
+
+
+
+
+
+# def plot_member_data(ax, data, member_label, color):
+#
+#     data = data[data[time_column] <= 300]
+#
+#     ax.plot(data[time_column], data[axis_of_interest], label=f'{member_label}', linewidth=2, color=color)
+#     ax.set_title(f'{member_label} - {axis_of_interest} over Time')
+#     ax.set_xlabel('')
+#     ax.set_ylabel(f'{axis_of_interest} (m/s^2)')
+#
+#     ax.legend(loc='upper right', frameon=True, shadow=True)
+#     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+#     ax.set_facecolor('#f5f5f5')  # light grey background color
+#
+#
+# plot_member_data(axs[0], data_member1, 'Het', 'blue')
+# plot_member_data(axs[1], data_member2, 'Alexander', 'green')
+# plot_member_data(axs[2], data_member3, 'Chengxi', 'red')
+#
+#
+# plt.tight_layout()
+# plt.show()
+
+
+# time_column = 'Time (s)'
+# axis_of_interest = 'Acceleration_y'
+# plt.style.use('seaborn-darkgrid')
+# plt.rcParams.update({'font.size': 12})
+# fig, axs = plt.subplots(3, 1, figsize=(15, 18), sharex=True)
+
+
+# def plot_member_data(ax, data, member_label, color):
+#     data = data[data[time_column] <= 300]
+#
+#     ax.plot(data[time_column], data[axis_of_interest], label=f'{member_label}', linewidth=2, color=color)
+#     ax.set_title(f'{member_label} - {axis_of_interest} over Time')
+#     ax.set_xlabel('')
+#     ax.set_ylabel(f'{axis_of_interest} (m/s^2)')
+#
+#     ax.legend(loc='upper right', frameon=True, shadow=True)
+#     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+#     ax.set_facecolor('#f5f5f5')  # light grey background color
+#
+#
+# def graph_member_data():
+#     plot_member_data(axs[0], data_member1, 'Het', 'blue')
+#     plot_member_data(axs[1], data_member2, 'Alexander', 'green')
+#     plot_member_data(axs[2], data_member3, 'Chengxi', 'red')
+#
+#     plt.tight_layout()
+#     plt.show()
+
 
 def remove_outliers(dataset):
     return_array = []
@@ -197,39 +260,7 @@ def remove_outliers(dataset):
         return_array.append(dataframe)
     return return_array
 
-
-def graph_all_axes(dataset):
-    return_array = []
-    full_dataframe = pd.DataFrame()
-    for dataframe in dataset:
-        y_data = dataframe.iloc[:, 0:5]
-        return_array.append(y_data)
-        mergers = [full_dataframe, y_data]
-        full_dataframe = pd.concat(mergers)
-
-    fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
-
-    data_x = full_dataframe.iloc[:, 1]
-    data_y = full_dataframe.iloc[:, 2]
-    data_z = full_dataframe.iloc[:, 3]
-    data_abs = full_dataframe.iloc[:, 4]
-
-    axs[0, 0].plot(data_x, "b--", data_x, "r--")
-    axs[0, 0].set_title("X Acceleration NOISY")
-
-    axs[0, 1].plot(data_y, "b--", data_y, "r--")
-    axs[0, 1].set_title("Y Acceleration NOISY")
-
-    axs[1, 0].plot(data_z, "b--", data_z, "r--")
-    axs[1, 0].set_title("Z Acceleration NOISY")
-
-    axs[1, 1].plot(data_abs, "b--", data_abs, "r--")
-    axs[1, 1].set_title("Absolute Acceleration NOISY")
-
-    plt.show()
-
 def pre_processing(dataset):
-    graph_all_axes(dataset)
     #https://www.w3schools.com/python/pandas/pandas_dataframes.asp -> documentation for pandas
     #https://www.w3schools.com/python/python_functions.asp documentation of python functions
 
@@ -254,6 +285,7 @@ def pre_processing(dataset):
 
 
     data_x = full_dataframe.iloc[:, 1]
+    print("data x: ", data_x)
     data_y = full_dataframe.iloc[:, 2]
     data_z = full_dataframe.iloc[:, 3]
     data_abs = full_dataframe.iloc[:, 4]
@@ -318,13 +350,21 @@ def normalize(dataframe):
 def classifier(segmented_data):
 
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
-    # walking_dataset = full_set_labeling(preprocessed_values_walking, "walking")
-    # jumping_dataset = full_set_labeling(preprocessed_values_jumping, "jumping")
-    walking_dataset = pre_processing(
-        create_and_combine_dataframes(segmented_data_member5_walking, segmented_data_member4_walking))
-    jumping_dataset = pre_processing(
-        create_and_combine_dataframes(segmented_data_member5_jumping, segmented_data_member4_jumping))
-    combined_dataset = walking_dataset + jumping_dataset
+    walking_dataset_1 = full_set_labeling(data_member4_walking, "walking")
+    jumping_dataset_1 = full_set_labeling(data_member4_jumping, "jumping")
+
+    walking_dataset_2 = full_set_labeling(data_member5_walking, "walking")
+    jumping_dataset_2 = full_set_labeling(data_member5_jumping, "jumping")
+
+
+
+    # walking_dataset = pd.concat([walking_dataset_1, walking_dataset_2])
+    #
+    # jumping_dataset = pd.concat([jumping_dataset_1, jumping_dataset_2])
+
+    wal
+
+    # combined_dataset = walking_dataset + jumping_dataset
     scaler = StandardScaler()
     l_reg = LogisticRegression(max_iter=10000)
     clf = make_pipeline(StandardScaler(), l_reg)
@@ -446,18 +486,16 @@ def graphical_user_interface():
 
 def main_function():
     plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
-
-    # preprocessed_values = pre_processing(create_and_combine_dataframes())
-    print("m5w", data_member5_walking)
-
+    print("COMBINED: ", create_and_combine_dataframes())
+    preprocessed_values = pre_processing(create_and_combine_dataframes())
     # features = feature_extraction(preprocessed_values)
-    # features = feature_extraction(preprocessed_values)
-    #print(features)
+    features = feature_extraction(preprocessed_values)
+    print(features)
     # print("PREPROCESSED: ", preprocessed_values)
     # print("SINGLE: ", segmented_data_member1)
     # print(features)
-    # normalized_values = normalize(preprocessed_values)
-    # classifier(normalized_values)
+    normalized_values = normalize(preprocessed_values)
+    classifier(normalized_values)
     graphical_user_interface()
 
 main_function()
