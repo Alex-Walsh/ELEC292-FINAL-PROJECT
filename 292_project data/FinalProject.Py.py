@@ -360,7 +360,7 @@ def pre_processing(dataset):
 
 def feature_extraction(dataset):
     dataframe_features = []
-    # TODO: FINISH EXTRACTING 10 DIFFERENT FEATURES, CURRENTLY ONLY AT 7
+
     i = 0
     for dataframe in dataset:
         # print("WINDOW: ", i, " :", dataframe.iloc[:,4])
@@ -378,7 +378,7 @@ def feature_extraction(dataset):
         features['median'] = abs_accel.median()
         features['sum'] = abs_accel.sum()
         features['variance'] = abs_accel.var()
-        features['variance'] = abs_accel.max()-abs_accel.min()
+        features['variance'] = abs_accel.iloc[:,4].max()-abs_accel.iloc[:,4].min()
         # features['range'] = abs_accel.rank()
         # print("FEATURES: ", features)
         dataframe_features.append(features)
