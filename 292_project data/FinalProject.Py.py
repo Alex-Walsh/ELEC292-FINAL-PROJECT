@@ -368,7 +368,7 @@ def feature_extraction(dataset):
         # print("DATAFRAME: ", dataframe)
         abs_accel = dataframe
         # print("ABS_ACCEL: ",abs_accel)
-        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median', 'sum', 'variance'])
+        features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median', 'sum', 'variance', 'range'])
         features['mean'] = abs_accel.mean()
         features['std'] = abs_accel.std()
         features['max'] = abs_accel.max()
@@ -378,6 +378,7 @@ def feature_extraction(dataset):
         features['median'] = abs_accel.median()
         features['sum'] = abs_accel.sum()
         features['variance'] = abs_accel.var()
+        features['variance'] = abs_accel.max()-abs_accel.min()
         # features['range'] = abs_accel.rank()
         # print("FEATURES: ", features)
         dataframe_features.append(features)
@@ -535,7 +536,7 @@ def main_function():
     plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
 
     preprocessed_values = pre_processing(create_and_combine_dataframes(segment_data(data_member1, window_size), segment_data(data_member2, window_size)))
-    
+
 
     features = feature_extraction(preprocessed_values)
     # features = feature_extraction(preprocessed_values)
