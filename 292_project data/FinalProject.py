@@ -124,22 +124,25 @@ def create_and_combine_dataframes(dataset1, dataset2):
 # print("Test", test_data_segmented)
 
 # TODO: UNCOMMENT THIS
-# hdf5_file_path = 'hdf5_data.h5'
-#
-# with h5py.File(hdf5_file_path, 'w') as hdf_file:
-#     dataset_group = hdf_file.create_group('dataset')
-#     train_group = dataset_group.create_group('Train')
-#     train_group.create_dataset('data', data=train_data_segmented.to_numpy())
-#     test_group = dataset_group.create_group('Test')
-#     test_group.create_dataset('data', data=test_data_segmented.to_numpy())
-#
-#     member1_group = hdf_file.create_group('Member1 name')
-#     member1_group.create_dataset('data', data=data_member1.to_numpy())
-#     member2_group = hdf_file.create_group('Member2 name')
-#     member2_group.create_dataset('data', data=data_member2.to_numpy())
-#     member3_group = hdf_file.create_group('Member3 name')
-#     member3_group.create_dataset('data', data=data_member3.to_numpy())
-#
+
+def create_hdf5():
+    hdf5_file_path = 'hdf5_data.h5'
+
+    with h5py.File(hdf5_file_path, 'w') as hdf_file:
+        dataset_group = hdf_file.create_group('dataset')
+        train_group = dataset_group.create_group('Train')
+        train_group.create_dataset('data', data=train_data_segmented.to_numpy())
+        test_group = dataset_group.create_group('Test')
+        test_group.create_dataset('data', data=test_data_segmented.to_numpy())
+
+        member1_group = hdf_file.create_group('Member1 name')
+        member1_group.create_dataset('data', data=data_member1.to_numpy())
+        member2_group = hdf_file.create_group('Member2 name')
+        member2_group.create_dataset('data', data=data_member2.to_numpy())
+        member3_group = hdf_file.create_group('Member3 name')
+        member3_group.create_dataset('data', data=data_member3.to_numpy())
+
+
 
 
 # PREPROCESSING - ALEX WALSH
@@ -533,6 +536,7 @@ def graphical_user_interface():
 
 
 def main_function():
+    create_hdf5()
     plot_walking_vs_jumping(data_member4_walking, data_member4_jumping)
 
     preprocessed_values = pre_processing(create_and_combine_dataframes(segment_data(data_member1, window_size), segment_data(data_member2, window_size)))
