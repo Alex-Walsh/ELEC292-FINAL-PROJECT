@@ -1,14 +1,5 @@
-import matplotlib.pyplot as plt
-import numpy
-import pandas as pd
 import numpy as np
 from gensim.parsing import preprocessing
-from sklearn.manifold import TSNE
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.model_selection import train_test_split
-import h5py
-import requests
 from scipy import stats
 from tkinter import filedialog
 from tkinter import *
@@ -17,7 +8,6 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 NavigationToolbar2Tk)
 from sklearn import preprocessing
 import tkinter as tk
-from sklearn.model_selection import train_test_split
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
@@ -26,8 +16,8 @@ from sklearn.metrics import accuracy_score, recall_score, confusion_matrix, Conf
     RocCurveDisplay, roc_auc_score, f1_score
 from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
-from sklearn.inspection import DecisionBoundaryDisplay
-from sklearn.decomposition import PCA
+
+
 
 # FILES FOR TRAINING
 
@@ -43,10 +33,56 @@ data_member4_jumping = pd.read_csv("Jumping-Raw Data.csv")
 data_member5_jumping = pd.read_csv("jumping.csv")
 data_member5_walking = pd.read_csv("walking.csv")
 
-# preprocessed_values_walking = []
-# preprocessed_values_jumping = []
 
+def load_and_label_data(walking_file_path, jumping_file_path, participant_name):
+    walking_data = pd.read_csv(walking_file_path)
+    jumping_data = pd.read_csv(jumping_file_path)
+    walking_data['Activity'] = f'{participant_name} Walking'
+    jumping_data['Activity'] = f'{participant_name} Jumping'
+    return pd.concat([walking_data, jumping_data], ignore_index=True)
 
+het_walking_path = "Het_walking_data.csv"
+het_jumping_path = "Het_jumping_data.csv"
+alexander_walking_path = "Alexander_walk.csv"
+alexander_jumping_path = "Alexander_jump.csv"
+chengxi_walking_path = "Chengxi_walking_data.csv"
+chengxi_jumping_path = "Chengxi_Jumping_Data.csv"
+
+paths = {
+    'Het': {
+        'walking': het_walking_path,
+        'jumping': het_jumping_path,
+    },
+    'Alexander': {
+        'walking': alexander_walking_path,
+        'jumping': alexander_jumping_path,
+    },
+    'Chengxi': {
+        'walking': chengxi_walking_path,
+        'jumping': chengxi_jumping_path,
+    }
+}
+
+all_data = pd.concat(
+    [load_and_label_data(info['walking'], info['jumping'], participant)
+     for participant, info in paths.items()], ignore_index=True)
+
+def plot_acceleration(data, activity_type):
+    plt.figure(figsize=(15, 5))
+    for i, (participant, _) in enumerate(paths.items(), start=1):
+        specific_activity_data = data[data['Activity'] == f'{participant} {activity_type}']
+        plt.subplot(1, 3, i)
+        for axis in ['x', 'y', 'z']:
+            plt.plot(specific_activity_data['Time (s)'], specific_activity_data[f'Acceleration {axis} (m/s^2)'], label=f'{axis.upper()} Axis')
+        plt.title(f"{participant} {activity_type}")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Acceleration (m/s^2)')
+        plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+plot_acceleration(all_data, 'Walking')
+plot_acceleration(all_data, 'Jumping')
 
 
 
@@ -63,16 +99,12 @@ sampling_rate = 100
 window_size = 5 * sampling_rate
 
 segmented_data_member1 = segment_data(data_member1, window_size)
-# print(segmented_data_member1)
 segmented_data_member2 = segment_data(data_member2, window_size)
 segmented_data_member3 = segment_data(data_member3, window_size)
 segmented_data_member4_walking = segment_data(data_member4_walking, window_size)
 segmented_data_member4_jumping = segment_data(data_member4_walking, window_size)
 segmented_data_member5_jumping = segment_data(data_member5_jumping, window_size)
 segmented_data_member5_walking = segment_data(data_member5_walking, window_size)
-
-
-
 
 
 def full_set_labeling(dataset, movement_type):
@@ -93,7 +125,6 @@ def determine_array_average(input_array):
             return_array.append(0)
     return return_array
 
-
 def create_and_combine_dataframes(dataset1, dataset2):
     combined_segmented_data = []
     for member in dataset1:
@@ -108,21 +139,12 @@ def create_and_combine_dataframes(dataset1, dataset2):
 
 
 
-
 #https://www.w3schools.com/python/python_for_loops.asp
-
-
-
-
-
-
-
 
 # PREPROCESSING - ALEX WALSH
 
 #If There are missing values, to deal with the missing values I will use sample and hold imputation
 #https://stackoverflow.com/questions/7696924/how-do-i-create-multiline-comments-in-python
-
 
 time_column = 'Time (s)'
 axis_of_interest = 'Linear Acceleration y (m/s^2)'
@@ -179,7 +201,6 @@ def remove_outliers_frame(dataset):
     print("DATAFRAME: ", dataframe)
     return dataframe
 
-
 def remove_outliers(dataset):
     return_array = []
     for dataframe in dataset:
@@ -195,7 +216,6 @@ def remove_outliers(dataset):
         dataframe.loc[z > threshold, "Absolute acceleration (m/s^2)"] = dataframe["Absolute acceleration (m/s^2)"].median()
         return_array.append(dataframe)
     return return_array
-
 
 def graph_all_axes_frame(dataframe):
     full_dataframe = dataframe
@@ -339,11 +359,8 @@ def feature_extraction(dataset):
 
     i = 0
     for dataframe in dataset:
-        # print("WINDOW: ", i, " :", dataframe.iloc[:,4])
-        #FEATURE EXTRACTION
-        # print("DATAFRAME: ", dataframe)
+
         abs_accel = dataframe
-        # print("ABS_ACCEL: ",abs_accel)
         features = pd.DataFrame(columns=['mean', 'std', 'max', 'min', 'skewness', 'kurtosis', 'median', 'sum', 'variance', 'range'])
         features['mean'] = abs_accel.mean()
         features['std'] = abs_accel.std()
@@ -354,9 +371,9 @@ def feature_extraction(dataset):
         features['median'] = abs_accel.median()
         features['sum'] = abs_accel.sum()
         features['variance'] = abs_accel.var()
-        features['range'] = abs_accel.iloc[:,4].max()-abs_accel.iloc[:,4].min()
+        features['range'] = abs_accel.max()-abs_accel.min()
         # features['range'] = abs_accel.rank()
-        # print("FEATURES: ", features)
+        print("FEATURES: ", features['skewness'])
         dataframe_features.append(features)
 
         i = i + 1
@@ -393,14 +410,11 @@ def normalize(dataframe):
         normalized_data.append(dataset)
     return normalized_data
 
-
-
 def classifier(segmented_data):
     # print("VARIANCE OF INPUTTED DATASET = ", calculate_variance_total())
     calculate_variance_total(segmented_data)
     # CLASSIFY INTO WALKING AND JUMPING CLASSES
     walking_dataset = full_set_labeling(pre_processing_no_segmentation(data_member4_walking), "walking").iloc[10:]
-    print("WAlking: ", walking_dataset)
     jumping_dataset = full_set_labeling(pre_processing_no_segmentation(data_member4_jumping), "jumping").iloc[10:]
 
 
@@ -425,10 +439,12 @@ def classifier(segmented_data):
     y_clf_prob = clf.predict_proba(X_test)
 
     acc = accuracy_score(Y_test, Y_pred)
+    print('*' * 100)
     print("accuracy is: ", acc)
 
     recall = recall_score(Y_test, Y_pred)
     print("recall is: ", recall)
+    print('*' * 100)
 
     cm = confusion_matrix(Y_test, Y_pred)
     cm_display = ConfusionMatrixDisplay(cm).plot()
@@ -532,7 +548,7 @@ def main_function():
 
 
     features = feature_extraction(preprocessed_values)
-    # features = feature_extraction(preprocessed_values)
+
     print(features)
 
     graphical_user_interface()
