@@ -149,7 +149,7 @@ def create_and_combine_dataframes(dataset1, dataset2):
 time_column = 'Time (s)'
 axis_of_interest = 'Linear Acceleration y (m/s^2)'
 
-plt.style.use('seaborn-darkgrid')
+
 plt.rcParams.update({'font.size': 12})
 
 fig, axs = plt.subplots(2, 2, figsize=(15, 18), sharex=True)
